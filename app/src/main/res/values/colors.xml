@@ -4,5 +4,7 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="colorWhite">#FFFFFF</color>
-    <color name="colorBlackDimText">#595959</color>
+    <color name="colorBlackDimText">#797979</color>
+    <color name="colorBlack">#000000</color>
+    <color name="colorSkyBlue">#A2BFF4</color>
 </resources>

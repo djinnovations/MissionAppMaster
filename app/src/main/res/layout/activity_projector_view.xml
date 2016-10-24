@@ -30,7 +30,7 @@
         android:layout_below="@+id/appBarLayout"
         android:background="@drawable/shadow" />
 
-    <dj.missionknolskape.main.uiutils.banes.HackyViewPager
+    <dj.appmastery.main.uiutils.banes.HackyViewPager
         android:id="@+id/view_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
