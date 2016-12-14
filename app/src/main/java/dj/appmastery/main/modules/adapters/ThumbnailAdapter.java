@@ -1,6 +1,7 @@
 package dj.appmastery.main.modules.adapters;
 
 import android.app.Application;
+import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -42,36 +43,104 @@ public class ThumbnailAdapter extends RecyclerView.Adapter<ThumbnailAdapter.Thum
         this.listener = listener;
     }
 
+    RecyclerView parentView;
     @Override
     public ThumbnailViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.adapter_thumbnail, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.adapter_thumbnail_new, parent, false);
+        view.setFocusable(true);
+        view.setFocusableInTouchMode(true);
+        parentView = (RecyclerView) parent;
         return new ThumbnailViewHolder(view);
     }
 
     ThumbnailData previousSelection;
 
     @Override
-    public void onBindViewHolder(ThumbnailViewHolder holder, int position) {
-        ThumbnailData data = thumbnailDataList.get(position);
+    public void onBindViewHolder(final ThumbnailViewHolder holder, int position) {
+        final ThumbnailData data = thumbnailDataList.get(position);
         holder.tvTitle.setText(data.getTitle());
         if (!TextUtils.isEmpty(data.getUrl()))
             Picasso.with(MyApplication.getInstance())
                     .load(data.getUrl())
                     .placeholder(R.drawable.vector_icon_progress_animation_white)
                     .into(holder.ivThumbnail);
-        if (data.isSelected()) {
+
+        holder.itemView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+
+                /*if (data.isSelected()) {
+                    //v.setBackgroundColor(Color.parseColor("#000000"));
+                    *//*holder.ivThumbnail.setBackground(ResourceReader.getInstance()
+                            .getDrawableFromResId(R.drawable.blue_square_border));*//*
+                    *//*v.setBackgroundResource(R.drawable.button_bg_click);
+                    v.invalidate();*//*
+                }
+
+                else*/ if(hasFocus){
+                    //v.setBackgroundColor(Color.parseColor("#0288D1"));
+                    /*holder.ivThumbnail.setBackground(ResourceReader.getInstance()
+                            .getDrawableFromResId(R.drawable.blue_square_border));*/
+                    //v.invalidate();
+                    holder.ivThumbnail.setBackground(ResourceReader.getInstance()
+                            .getDrawableFromResId(R.drawable.blue_square_border));
+                }
+                else{
+                    //v.setBackgroundColor(Color.parseColor("#262b32"));
+                    //v.setBackgroundResource(R.drawable.button_border);
+                    holder.ivThumbnail.setBackground(null);;
+                    //v.invalidate();
+                }
+            }
+        });
+        if (data.isSelected()){
+            holder.itemView.requestFocus();
+            previousSelection = data;
+        }
+        /*if (data.isSelected()) {
             holder.ivThumbnail.setBackground(ResourceReader.getInstance()
                     .getDrawableFromResId(R.drawable.blue_square_border));
             previousSelection = data;
         }
         else {
             holder.ivThumbnail.setBackground(null);
-        }
+        }*/
     }
 
     @Override
     public int getItemCount() {
         return thumbnailDataList.size();
+    }
+
+    int position;
+    public void performClick(boolean isNext){
+        position = thumbnailDataList.indexOf(previousSelection);
+        if (isNext){
+            if (position == thumbnailDataList.size() - 1)
+                return;
+            position = position+1;
+        }
+        else{
+            if (position == 0)
+                return;
+            position = position-1;
+        }
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                parentView.smoothScrollToPosition(position);
+            }
+        }, 100);
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ThumbnailViewHolder holder = (ThumbnailViewHolder) parentView.findViewHolderForAdapterPosition(position);
+                holder.itemView.performClick();
+            }
+        }, 400);
+
     }
 
     class ThumbnailViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{

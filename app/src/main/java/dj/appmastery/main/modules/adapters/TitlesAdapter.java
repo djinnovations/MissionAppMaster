@@ -1,6 +1,9 @@
 package dj.appmastery.main.modules.adapters;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,9 +21,9 @@ import dj.appmastery.main.uiutils.ResourceReader;
 /**
  * Created by User on 23-10-2016.
  */
-public class TitlesAdapter extends RecyclerView.Adapter<TitlesAdapter.TitlesViewHolder>{
+public class TitlesAdapter extends RecyclerView.Adapter<TitlesAdapter.TitlesViewHolder> {
 
-    public interface MenuSelectionListener{
+    public interface MenuSelectionListener {
         void onMenuSelected(TitlesData data);
     }
 
@@ -28,8 +31,8 @@ public class TitlesAdapter extends RecyclerView.Adapter<TitlesAdapter.TitlesView
 
     List<TitlesData> titles = new ArrayList<>();
 
-    public void changeData(List<TitlesData> titles){
-        this.titles = titles;
+    public void changeData(List<TitlesData> titles) {
+        this.titles = new ArrayList<>(titles);
         notifyDataSetChanged();
     }
 
@@ -37,28 +40,54 @@ public class TitlesAdapter extends RecyclerView.Adapter<TitlesAdapter.TitlesView
         this.listener = listener;
     }
 
-    protected int getRootLayout(){
+    protected int getRootLayout() {
         return R.layout.adapter_main_menu;
     }
 
     @Override
     public TitlesViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(getRootLayout(), parent, false);
+        view.setFocusable(true);
+        view.setFocusableInTouchMode(true);
         return new TitlesViewHolder(view);
     }
 
     private TitlesData previousSelection;
+    private final String TAG = "TitlesAdapter";
+    //boolean iscalledfromreq = false;
+
     @Override
-    public void onBindViewHolder(TitlesViewHolder holder, int position) {
-        TitlesData titlesData = titles.get(position);
-        holder.tvMenu.setText(titlesData.getTitle());
+    public void onBindViewHolder(final TitlesViewHolder holder, final int position) {
+        final TitlesData titlesData = titles.get(position);
+        /*holder.itemView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+
+                if (hasFocus) {
+                    Log.d(TAG, "has focus");
+                    *//*if (!iscalledfromreq) {*//*
+                        holder.tvMenu.setBackground(ResourceReader.getInstance()
+                                .getDrawableFromResId(R.drawable.blue_square_border));
+                    //}
+                    //iscalledfromreq = false;
+                } else if (titlesData.isSelected()) {
+                    holder.tvMenu.setBackgroundColor(ResourceReader.getInstance()
+                            .getColorFromResource(R.color.colorBlack));
+                } else {
+                    holder.tvMenu.setBackgroundColor(ResourceReader.getInstance()
+                            .getColorFromResource(R.color.colorBlackDimText));
+                }
+            }
+        });*/
+
         if (titlesData.isSelected()) {
-            holder.tvMenu.setBackgroundColor(ResourceReader.getInstance()
-                    .getColorFromResource(R.color.colorBlack));
+            holder.itemView.requestFocus();
+            /*holder.tvMenu.setBackgroundColor(ResourceReader.getInstance()
+                    .getColorFromResource(R.color.colorBlack));*/
+            holder.itemView.setSelected(true);
             previousSelection = titlesData;
         }
-        else holder.tvMenu.setBackgroundColor(ResourceReader.getInstance()
-                .getColorFromResource(R.color.colorBlackDimText));
+        holder.tvMenu.setText(titlesData.getTitle());
     }
 
     @Override
@@ -66,10 +95,11 @@ public class TitlesAdapter extends RecyclerView.Adapter<TitlesAdapter.TitlesView
         return titles.size();
     }
 
-    class TitlesViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    class TitlesViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         @Bind(R.id.tvMenu)
         TextView tvMenu;
+
         public TitlesViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
@@ -78,7 +108,7 @@ public class TitlesAdapter extends RecyclerView.Adapter<TitlesAdapter.TitlesView
 
         @Override
         public void onClick(View v) {
-            int pos = titles.indexOf(previousSelection);
+            final int pos = titles.indexOf(previousSelection);
             if (pos == getAdapterPosition())
                 return;
             listener.onMenuSelected(titles.get(getAdapterPosition()));
@@ -87,7 +117,14 @@ public class TitlesAdapter extends RecyclerView.Adapter<TitlesAdapter.TitlesView
             titles.set(getAdapterPosition(), data);
             previousSelection.setSelected(false);
             titles.set(pos, previousSelection);
-            notifyDataSetChanged();
+            (new Handler(Looper.getMainLooper())).post(new Runnable() {
+                @Override
+                public void run() {
+                    //notifyItemChanged(pos);
+                    //notifyItemChanged(getAdapterPosition());
+                    notifyDataSetChanged();
+                }
+            });
         }
     }
 }

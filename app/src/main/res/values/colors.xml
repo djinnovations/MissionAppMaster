@@ -7,4 +7,7 @@
     <color name="colorBlackDimText">#797979</color>
     <color name="colorBlack">#000000</color>
     <color name="colorSkyBlue">#A2BFF4</color>
+
+    <item name="redStatus" type="color">#FFD8433C</item>
+
 </resources>

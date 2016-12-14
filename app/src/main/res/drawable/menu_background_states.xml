@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/blue_square_border_black_filling"
+        android:state_enabled="true" android:state_selected="true" android:state_focused="true" />
+    <item android:drawable="@drawable/blue_square_border_blackdim_filling"
+        android:state_enabled="true" android:state_focused="true" />
+    <item android:drawable="@color/colorBlack"
+        android:state_enabled="true"
+        android:state_selected="true" />
+    <item android:drawable="@color/colorBlackDimText"
+        android:state_enabled="true" />
+</selector>

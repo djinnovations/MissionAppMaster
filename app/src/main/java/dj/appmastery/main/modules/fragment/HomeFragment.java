@@ -65,5 +65,7 @@ public class HomeFragment extends Fragment{
         thumbnailAdapter.changeData(dataList);
     }
 
-
+    public void moveOver(boolean isNext){
+        thumbnailAdapter.performClick(isNext);
+    }
 }

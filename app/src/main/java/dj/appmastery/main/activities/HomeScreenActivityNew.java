@@ -1,19 +1,12 @@
 package dj.appmastery.main.activities;
 
-import android.content.ComponentName;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 
-import com.android.vending.billing.IInAppBillingService;
 import com.androidquery.AQuery;
 import com.androidquery.callback.AjaxCallback;
 import com.androidquery.callback.AjaxStatus;
@@ -25,27 +18,25 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import dj.appmastery.main.R;
-import dj.appmastery.main.model.BottomTitlesMenuResponse;
-import dj.appmastery.main.model.SelectionResponse;
+import dj.appmastery.main.model.MenuResponse;
+import dj.appmastery.main.model.SelectionResponseNew;
 import dj.appmastery.main.model.ThumbnailData;
 import dj.appmastery.main.model.TitlesData;
 import dj.appmastery.main.modules.adapters.SubTitlesAdapter;
+import dj.appmastery.main.modules.adapters.ThumbnailAdapter;
 import dj.appmastery.main.modules.adapters.TitlesAdapter;
-import dj.appmastery.main.modules.fragment.HomeFragment;
+import dj.appmastery.main.server.URLHelper;
 import dj.appmastery.main.utils.IDUtils;
 import dj.appmastery.main.utils.NetworkResultValidator;
-import dj.appmastery.main.utils.URLHelper;
 
 /**
  * Created by User on 23-10-2016.
  */
-public class HomeScreenActivity extends BaseActivity {
+public class HomeScreenActivityNew extends BaseActivity {
 
-    private static final String TAG = "HomeScreenActivity";
-    @Bind(R.id.progressBar)
-    ProgressBar progressBar;
-    @Bind(R.id.container)
-    FrameLayout container;
+    private static final String TAG = "HomeScreenActivityNew";
+    /*@Bind(R.id.container)
+    FrameLayout container;*/
     @Bind(R.id.rvSubMenu)
     RecyclerView rvSubMenu;
     @Bind(R.id.rvMainMenu)
@@ -57,12 +48,10 @@ public class HomeScreenActivity extends BaseActivity {
     TitlesAdapter.MenuSelectionListener mainMenuSelectionListener;
     TitlesAdapter.MenuSelectionListener subMenuSelectionListener;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home_screen);
+        setContentView(R.layout.activity_home_screen_new);
         ButterKnife.bind(this);
         setProgressBar(progressBar);
         mainMenuSelectionListener = new TitlesAdapter.MenuSelectionListener() {
@@ -77,10 +66,16 @@ public class HomeScreenActivity extends BaseActivity {
                 updateView(false, data);
             }
         };
+        vidSelectionListener = new ThumbnailAdapter.MenuSelectionListener() {
+            @Override
+            public void onMenuSelected(ThumbnailData data) {
+
+            }
+        };
         setUpRecycleViews();
-        queryForTitles();
-        homeFragment = new HomeFragment();
-        getSupportFragmentManager().beginTransaction().replace(container.getId(), homeFragment).commit();
+        queryForMenus();
+        /*homeFragment = new HomeFragment();
+        getSupportFragmentManager().beginTransaction().replace(container.getId(), homeFragment).commit();*/
     }
 
     public void updateView(boolean isMainMenu, TitlesData data) {
@@ -89,26 +84,12 @@ public class HomeScreenActivity extends BaseActivity {
             changeSubMenu(data.getTitle());
         } else {
             subMenu = data.getTitle();
-            queryForThumbnail();
+            queryForThumbnail(mainMenu, subMenu);
         }
     }
 
-
-    IInAppBillingService mService;
-
-    ServiceConnection mServiceConn = new ServiceConnection() {
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mService = null;
-        }
-
-        @Override
-        public void onServiceConnected(ComponentName name,
-                                       IBinder service) {
-            mService = IInAppBillingService.Stub.asInterface(service);
-        }
-    };
-
+    @Bind(R.id.rvThumbnail)
+    RecyclerView rvThumbnail;
 
     private String mainMenu;
     private String subMenu;
@@ -128,6 +109,13 @@ public class HomeScreenActivity extends BaseActivity {
         return super.onKeyUp(keyCode, event);*//*
     }*/
 
+    ThumbnailAdapter.MenuSelectionListener vidSelectionListener;
+    private ThumbnailAdapter thumbnailAdapter;
+
+    public void updateThumbnailView(List<ThumbnailData> dataList){
+        thumbnailAdapter.changeData(dataList);
+    }
+
     private void setUpRecycleViews() {
         LinearLayoutManager mLayoutManager1 = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         rvMainMenu.setHasFixedSize(false);
@@ -142,42 +130,60 @@ public class HomeScreenActivity extends BaseActivity {
         rvSubMenu.setItemAnimator(new DefaultItemAnimator());
         mSubTitlesAdapter = new SubTitlesAdapter(subMenuSelectionListener);
         rvSubMenu.setAdapter(mSubTitlesAdapter);
+
+        LinearLayoutManager mLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        rvThumbnail.setHasFixedSize(false);
+        rvThumbnail.setLayoutManager(mLayoutManager);
+        rvThumbnail.setItemAnimator(new DefaultItemAnimator());
+        thumbnailAdapter = new ThumbnailAdapter(vidSelectionListener);
+        rvThumbnail.setAdapter(thumbnailAdapter);
     }
 
-    public final int TITLES_CALL = IDUtils.generateViewId();
+    private final int MAIN_MENU_CALL = IDUtils.generateViewId();
 
-    public void queryForTitles() {
+    @Bind(R.id.progressBar)
+    ProgressBar progressBar;
+
+    public void queryForMenus() {
+        //WindowUtils.justPlainOverLay = true;
+        //showOverLay(null, 0, WindowUtils.PROGRESS_FRAME_GRAVITY_CENTER);
         startProgress();
-        AjaxCallback ajaxCallback = getAjaxCallback(TITLES_CALL);
+        AjaxCallback ajaxCallback = getAjaxCallback(MAIN_MENU_CALL);
         ajaxCallback.method(AQuery.METHOD_GET);
-        Log.d(TAG, "GET url- queryForTitles()" + TAG + ": " + URLHelper.getAppMasterTitlesAPI());
-        getAQuery().ajax(URLHelper.getAppMasterTitlesAPI(), String.class, ajaxCallback);
+        Log.d(TAG, "GET url- queryForTitles()" + TAG + ": " + URLHelper.getInstance().getMainMenuAPI());
+        getAQuery().ajax(URLHelper.getInstance().getMainMenuAPI(), String.class, ajaxCallback);
     }
+
 
     public final int THUMBNAIL_CALL = IDUtils.generateViewId();
 
-    public void queryForThumbnail() {
-        startProgress();
+    public void queryForThumbnail(String mainMenuTitle, String subMenuTitle) {
+        if (menuResponse == null)
+            return;
+        /*WindowUtils.justPlainOverLay = true;
+        showOverLay(null, 0, WindowUtils.PROGRESS_FRAME_GRAVITY_CENTER);
+        startProgress();*/
+        String categoryId = menuResponse.getCategoryId(mainMenuTitle);
+        String subMenuId = menuResponse.getSubMenuId(subMenuTitle);
         AjaxCallback ajaxCallback = getAjaxCallback(THUMBNAIL_CALL);
         ajaxCallback.method(AQuery.METHOD_GET);
-        Log.d(TAG, "GET url- queryForThumbnail()" + TAG + ": " + URLHelper.getThumbnailAPI(mainMenu, subMenu));
-        getAQuery().ajax(URLHelper.getThumbnailAPI(mainMenu, subMenu), String.class, ajaxCallback);
+        Log.d(TAG, "GET url- queryForThumbnail()" + TAG + ": " + URLHelper.getInstance().getVideoThumbnails(categoryId, subMenuId));
+        getAQuery().ajax(URLHelper.getInstance().getVideoThumbnails(categoryId, subMenuId), String.class, ajaxCallback);
     }
-
-    BottomTitlesMenuResponse menuResponse;
-    SelectionResponse selectionResponse;
+    MenuResponse menuResponse;
+    SelectionResponseNew selectionResponse;
 
     @Override
     public void serverCallEnds(int id, String url, Object json, AjaxStatus status) {
         Log.d(TAG, "url queried-" + TAG + ": " + url);
         Log.d(TAG, "response-" + TAG + ": " + json);
         stopProgress();
-        if (id == TITLES_CALL) {
+        if (id == MAIN_MENU_CALL) {
             boolean success = NetworkResultValidator.getInstance().isResultOK(url, (String) json, status, null,
                     progressBar, this);
             if (success) {
                 //JSONObject jsonObject = new JSONObject(json.toString());
-                menuResponse = new Gson().fromJson((String) json, BottomTitlesMenuResponse.class);
+                menuResponse = new Gson().fromJson((String) json, MenuResponse.class);
                 menuResponse.onParse();
                 if (menuResponse != null) {
                     Log.d("", "parsed-BottomTitlesMenuResponse : " + menuResponse.toString());
@@ -207,7 +213,7 @@ public class HomeScreenActivity extends BaseActivity {
             boolean success = NetworkResultValidator.getInstance().isResultOK(url, (String) json, status, null,
                     progressBar, this);
             if (success) {
-                selectionResponse = new Gson().fromJson((String) json, SelectionResponse.class);
+                selectionResponse = new Gson().fromJson((String) json, SelectionResponseNew.class);
                 selectionResponse.onParse();
                 if (selectionResponse != null) {
                     Log.d("", "parsed SelectionResponse: " + selectionResponse.toString());
@@ -217,31 +223,33 @@ public class HomeScreenActivity extends BaseActivity {
         } else super.serverCallEnds(id, url, json, status);
     }
 
-    HomeFragment homeFragment;
+    //HomeFragment homeFragment;
     private void changeThumbnail() {
         List<ThumbnailData> dataList = new ArrayList<>();
-        List<String> urlList = selectionResponse.getUrls();
+        List<String> urlList = selectionResponse.getUrlList();
         int index = 0;
-        for (String title : selectionResponse.getTitles()) {
+        for (String title : selectionResponse.getTitleList()) {
             if (index == 0)
                 dataList.add(new ThumbnailData(true, title, urlList.get(index)));
             else dataList.add(new ThumbnailData(false, title, urlList.get(index)));
             index++;
         }
-        homeFragment.updateView(dataList);
+        updateThumbnailView(dataList);
     }
 
     public void changeSubMenu(String title) {
         int index = 0;
         List<TitlesData> subtitlesDataList = new ArrayList<>();
-        for (String txt : menuResponse.getMapOfMenu().get(title)) {
+        for (String txt : menuResponse.getMapOfMenuTitleSubMenuTitle().get(title)) {
             if (index == 0)
                 subtitlesDataList.add(new TitlesData(txt, true));
             else subtitlesDataList.add(new TitlesData(txt, false));
             index++;
         }
-        subMenu = subtitlesDataList.get(0).getTitle();
+        if (subtitlesDataList.size() > 0)
+            subMenu = subtitlesDataList.get(0).getTitle();
+        subMenu = "";
         mSubTitlesAdapter.changeData(subtitlesDataList);
-        queryForThumbnail();
+        queryForThumbnail(mainMenu, subMenu);
     }
 }

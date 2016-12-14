@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#dd000000"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:layout_below="@+id/ivLogo"
+        android:indeterminate="true"
+        android:progressDrawable="@drawable/drawable_progress_webview"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/ivLogo"
+        android:layout_width="100dp"
+        android:layout_height="56dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="30dp"
+        android:layout_marginTop="20dp"
+        android:src="@drawable/img_logo" />
+
+    <!--<FrameLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/rvSubMenu"
+        android:layout_below="@+id/ivLogo">
+
+    </FrameLayout>-->
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rvThumbnail"
+        android:layout_above="@+id/rvSubMenu"
+        android:layout_below="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+    </android.support.v7.widget.RecyclerView>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rvSubMenu"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_above="@+id/rvMainMenu"
+        android:layout_marginBottom="5dp">
+
+    </android.support.v7.widget.RecyclerView>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/rvMainMenu"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="4dp">
+
+    </android.support.v7.widget.RecyclerView>
+
+</RelativeLayout>
